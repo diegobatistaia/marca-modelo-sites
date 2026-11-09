@@ -1,0 +1,250 @@
+# ---------------------------------------------------------------------------
+# Configuração do SITE (o que é do NICHO): editorias, fontes de notícia,
+# palavras da coleta, regras de qualidade.
+#
+# O que é da MARCA (nome, domínio, @, e-mail, robô, hospedagem) NÃO fica aqui:
+# fica em marca.yaml e o motor junta os dois (scripts/engine/config.py).
+# Valores de nicho abaixo são de EXEMPLO: troque pelas fontes do seu nicho.
+# ---------------------------------------------------------------------------
+
+site:
+  default_language: pt
+  # Só português. Uma versão em outro idioma é outra marca, outro repositório.
+  languages: [pt]
+  timezone: America/Sao_Paulo
+  locale:
+    pt: pt_BR
+  html_lang:
+    pt: pt-BR
+
+niche:
+  slug: noticias
+  term:
+    pt: Notícias
+  term_short:
+    pt: Notícias
+
+brand:
+  # Identidade visual da marca (ver LEIAME-MOLDE.md, seção Identidade).
+  # Fundo sempre `noite`, cor da marca `lima`. A paleta completa do site fica
+  # em templates/site.css.j2; aqui ficam as cores que o motor usa em outros
+  # lugares (manifesto, cor de reserva das editorias).
+  ink: "#0B0A10"        # noite
+  paper: "#0B0A10"      # noite (fundo do app instalado)
+  primary: "#C6FF1A"    # lima
+  accent: "#FF3D8B"     # magenta
+  surface: "#17151F"    # carvao
+  border: "#2A2733"     # linha
+  muted: "#A7A3B5"      # cinza
+  default_theme: dark
+  fonts:
+    # Anton nos titulos, Archivo no texto, Silkscreen nas etiquetas. Vem do
+    # Google Fonts (gratuitas para uso comercial).
+    stylesheet: "https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@62..125,400..900&family=Silkscreen:wght@400;700&display=swap"
+    title: "'Anton', Impact, 'Arial Narrow', sans-serif"
+    display: "'Archivo', 'Arial Narrow', Arial, sans-serif"
+    mono: "'Silkscreen', ui-monospace, monospace"
+  logo:
+    lockup: /assets/logo/logo-mono-preto.svg
+    lockup_dark: /assets/logo/logo-transparente.svg
+    icon: /assets/logo/simbolo-destaque.svg
+    # Avatar da redacao na materia: o simbolo em lima, nos dois temas.
+    icon_light: /assets/logo/simbolo-destaque.svg
+    icon_dark: /assets/logo/simbolo-destaque.svg
+    favicon_svg: /assets/logo/favicon.svg
+    favicon_ico: /assets/logo/favicon.ico
+
+seo:
+  meta_description_range: [150, 160]
+  twitter_site: ""
+  organization_type: NewsMediaOrganization
+
+analytics:
+  # Vazio = tag nao e renderizada. Preencher depois de criar a propriedade GA4.
+  ga4_id: ""
+  search_console_verification: ""
+  ga4_property_id: ""
+
+ads:
+  # Ate a aprovacao do AdSense, enabled fica false; client_id pode entrar antes.
+  enabled: false
+  client_id: ""
+  slots:
+    top_leaderboard: ""
+    in_content: ""
+    home_between_blocks: ""
+    home_sidebar: ""
+    footer: ""
+  readiness:
+    min_posts_per_language: 30
+    min_days_live: 21
+    max_queue_items: 5
+    min_gate_pass_rate: 0.70
+  labels:
+    pt: Continua após a publicidade
+
+newsletter:
+  enabled: false
+  action: ""
+  title:
+    pt: Receba as notícias por e-mail
+  text:
+    pt: O que saiu de mais importante, checado e com fonte.
+
+editorial:
+  categories:
+    - slug: {pt: noticias}
+      label: {pt: "Notícias"}
+      color: "#C6FF1A"
+    - slug: {pt: lancamentos}
+      label: {pt: "Lançamentos"}
+      color: "#FF3D8B"
+    - slug: {pt: guias}
+      label: {pt: "Guias"}
+      color: "#2EE6FF"
+    - slug: {pt: mercado}
+      label: {pt: "Mercado"}
+      color: "#A7A3B5"
+  home_layout:
+    - today
+    - feed
+    - ad_between_blocks
+    - by_section
+    - community
+    - newsletter
+  today_label:
+    pt: Hoje
+  today_count: 4
+  timeline_count: 7
+  highlights_count: 3
+  highlights_days: 7
+  highlights_label:
+    pt: Destaques da semana
+  section_posts: 3
+  section_columns: 4
+  most_read_min_views: 2
+  fallback_category: noticias
+  most_read_count: 5
+  topic_module_count: 4
+  related_posts: 3
+
+publishing:
+  # Data do primeiro deploy. Vazio = primeira fase do ramp.
+  launch_date: ""
+  # Comece com poucas matérias por dia e suba. Só avança de fase se o gate
+  # aprovar acima de ramp_gate_pass_rate na janela.
+  ramp:
+    - {from_day: 0,  posts_per_language: 5}
+    - {from_day: 14, posts_per_language: 8}
+  # Horários (fuso do site) em que a coleta roda. Se mudar aqui, mude o cron do
+  # workflow Coletar e o horário da Routine de redação (minuto 37 de cada hora).
+  run_hours: [7, 9, 11, 13, 15, 17, 19, 21]
+  ramp_gate_pass_rate: 0.80
+  ramp_window_days: 14
+
+collection:
+  lookback_hours: 48
+  # A primaria publica primeiro e a imprensa escreve horas ou um dia depois.
+  # Com a mesma janela para as duas, o anuncio original cai fora justamente
+  # quando a cobertura esta no auge.
+  lookback_hours_primary: 120
+  max_candidates: 60
+  # Overlap minimo de palavras de titulo para juntar dois itens na mesma pauta.
+  cluster_threshold: 0.42
+  min_title_chars: 25
+  # Duas fontes independentes = dois donos diferentes. Veiculos do mesmo grupo
+  # contam como UMA fonte (evita "confirmacao" circular por republicacao).
+  independence_key: owner
+  tavily:
+    enabled: false     # ligar depois de configurar o MCP do Tavily
+    max_results: 8
+
+sources:
+  # EXEMPLO. Troque pelos feeds do nicho. O que importa é a diversidade de
+  # OWNERS: a regra das duas fontes conta grupos donos, não sites.
+  # kind: primary = o próprio dono da notícia (empresa, órgão oficial): o
+  # anúncio dele basta sozinho para "a empresa anunciou X".
+  # Quem não tem RSS pode ser lido como página: type: html, link_prefix: "/caminho/".
+  rss:
+    - {name: Fonte Oficial Exemplo, url: "https://exemplo-oficial.com/feed/", lang: pt, owner: oficial, tier: 1, kind: primary}
+    - {name: Imprensa Exemplo A, url: "https://exemplo-a.com/feed/", lang: pt, owner: grupo-a, tier: 1}
+    - {name: Imprensa Exemplo B, url: "https://exemplo-b.com/rss/", lang: en, owner: grupo-b, tier: 2}
+
+keywords:
+  # Filtro de coleta. Um item só entra se casar com `include` e não com `exclude`.
+  include:
+    - lancamento
+    - anuncio
+    - novidade
+  exclude:
+    - cupom
+    - coupon
+    - horoscopo
+    - apostas
+    - cassino
+
+quality_gate:
+  min_independent_sources: 2
+  # Herdado do Cortexplor: o anúncio que a própria empresa publica no canal
+  # oficial dela (fonte `kind: primary`, ex.: Rockstar, PlayStation Blog) basta
+  # sozinho para a matéria "a empresa anunciou X". A matéria marca `fonte_unica: anuncio_oficial`,
+  # atribui tudo à empresa e mostra um aviso próprio no rodapé. Qualquer
+  # outra notícia continua exigindo duas fontes independentes.
+  official_announcement_alone: true
+  word_count: {min: 600, max: 1000}
+  # Similaridade maxima com o texto-fonte (shingles de 5 palavras).
+  max_source_similarity: 0.18
+  # Maior trecho literal permitido em comum com uma fonte, em palavras.
+  max_verbatim_run: 8
+  meta_description_range: [150, 160]
+  require:
+    - meta_description
+    - image_alt
+    - schema_news_article
+    - sources_cited
+    - h1_present
+    - internal_links
+  min_internal_links: 1
+
+images:
+  # fonte = og:image da matéria-fonte (de preferência oficial), recortada em
+  # 16:9; sem imagem utilizável, cai na capa própria (scripts/engine/capa.py).
+  provider: fonte
+  fallback_provider: pexels
+  orientation: landscape
+  attribution_required: true
+  query_suffix: ""
+
+model:
+  id: claude-opus-5
+  effort: high
+  max_tokens: 16000
+
+voice:
+  skill: voz-da-marca
+  skill_path: .claude/skills/voz-da-marca/SKILL.md
+
+legal:
+  pages: [sobre, privacidade, contato, termos]
+
+deploy:
+  # Host, porta, usuário, pasta e liga/desliga ficam em marca.yaml (deploy:).
+  # Aqui só o que NÃO vai para o servidor.
+  exclude:
+    - ".git*"
+    - ".claude/"
+    - "scripts/"
+    - "templates/"
+    - "content/"
+    - "data/"
+    - "*.md"
+    - "site.config.yaml"
+    - "marca.yaml"
+    - "requirements.txt"
+    - "assets/logo/source/"
+    # Instagram: as pautas e o rascunho do gerador nao vao para o site. E ig/
+    # (a midia publica dos posts, enviada pelo workflow Instagram) fica fora
+    # do --delete: sem esta linha, cada deploy apagaria as imagens do servidor.
+    - "/social/"
+    - "/ig/"
+    - "requirements-instagram.txt"

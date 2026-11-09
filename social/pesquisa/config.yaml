@@ -1,0 +1,65 @@
+# Motor de pesquisa de vídeos dos concorrentes: o que é do NICHO da marca.
+#
+# O @ da marca e o nome vêm de marca.yaml; a chave é o secret META_TOKEN
+# (chave de Página do Facebook, que nunca expira). Troque os temas e os
+# concorrentes pelos do seu nicho. Valores abaixo são de EXEMPLO.
+
+pasta: social/pesquisa            # onde ficam coletas, listas e o histórico
+entrada: social/reels/entrada     # onde caem os vídeos escolhidos (antes da moldura)
+
+janela_horas: 72                  # só entram vídeos publicados nas últimas X horas
+posts_por_perfil: 30              # quantos posts recentes ler de cada perfil
+lista_tamanho: 30                 # quantos vídeos vão na lista do dia
+max_por_perfil: 4                 # no máximo X vídeos do mesmo perfil na lista
+minimo_vezes_media: 1.0           # vídeo precisa ir pelo menos X vezes a média do perfil
+
+# Piso de Reels: em toda rodada o robô confere a fila de hoje e dos próximos 2
+# dias e baixa sozinho os melhores da lista até cobrir os horários vazios.
+automatico:
+  max_por_rodada: 30
+
+# Legenda com estas palavras não vira Reel (propaganda, venda, sorteio).
+# Mercado financeiro: some "curso", "mentoria", "sinal", "lucro garantido",
+# "renda passiva", "day trade", "compre agora".
+bloquear: ["comenta quero", "desconto", "cupom", "#publi", "publicidade", "parceria paga",
+           "assine", "sorteio", "link na bio", "frete grátis", "compre", "oferta",
+           "pre-order", "pré-venda"]
+
+# Reserva (vídeos abaixo da média, só quando a lista não basta).
+reserva_minimo: 0.6
+
+# Coletas por dia (horário de Brasília).
+coletas: ["06:00"]
+
+# Modo lançamento (opcional): a partir de uma data, mais coletas e mais peso
+# para um tema. Ex.: o lançamento de um jogo, carro ou celular.
+lancamento:
+  desde: ""                       # ex.: "2026-12-01"; vazio = desligado
+  coletas: ["06:00", "11:00", "15:00", "19:00"]
+  janela_horas: 48
+  lista_tamanho: 40
+  pesos: {}                       # ex.: {principal: 5}
+
+# Temas: palavras na legenda que identificam o assunto, o peso na escolha,
+# o "assunto" que entra no CTA ("Essa é a página pra seguir e acompanhar <assunto>")
+# e as hashtags do tema. O ÚLTIMO tema é o de reserva (quando a legenda não diz nada).
+temas:
+  principal:
+    nome: Assunto Principal
+    assunto: o assunto principal
+    palavras: ["assunto principal"]
+    hashtags: ["#assuntoprincipal"]
+    peso: 2
+  geral:
+    nome: o universo do nicho
+    assunto: o universo do nicho
+    palavras: []
+    hashtags: ["#nicho"]
+    peso: 1
+
+# Perfis concorrentes. "tema" vale quando a legenda não diz o assunto.
+# O teste (Actions > Pesquisa de vídeos > teste) mostra quais a API enxerga
+# (só perfis profissionais); os que falharem saem.
+concorrentes:
+  - {perfil: perfil_exemplo_1, tema: principal}
+  - {perfil: perfil_exemplo_2, tema: geral}

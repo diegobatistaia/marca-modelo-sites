@@ -1,0 +1,108 @@
+/* Página de links da bio do Instagram: /bio/ (identidade em project-files/identidade) */
+:root{
+  --noite:#0B0A10;
+  --carvao:#17151F;
+  --carvao-hi:#1E1B28;
+  --linha:#2A2733;
+  --lima:#C6FF1A;
+  --branco:#FFFFFF;
+  --cinza:#A7A3B5;
+  --magenta:#FF3D8B;
+  --laranja:#FF8A1F;
+  --ciano:#2EE6FF;
+  --f-titulo:'Anton',Impact,'Arial Narrow',sans-serif;
+  --f-texto:'Archivo','Arial Narrow',Arial,sans-serif;
+  --f-pixel:'Silkscreen',ui-monospace,monospace;
+  --px:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--noite)}
+body{min-height:100vh;background:var(--noite);color:var(--branco);font-family:var(--f-texto);font-stretch:90%;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+
+/* Grade de pixels ao fundo, bem apagada */
+.bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:24px 24px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%)}
+main{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:18px 16px 40px}
+
+/* Recorte em degrau, a assinatura da moldura */
+.recorte{clip-path:polygon(
+  0 calc(var(--px)*2),var(--px) calc(var(--px)*2),var(--px) var(--px),calc(var(--px)*2) var(--px),calc(var(--px)*2) 0,
+  calc(100% - var(--px)*2) 0,calc(100% - var(--px)*2) var(--px),calc(100% - var(--px)) var(--px),calc(100% - var(--px)) calc(var(--px)*2),100% calc(var(--px)*2),
+  100% calc(100% - var(--px)*2),calc(100% - var(--px)) calc(100% - var(--px)*2),calc(100% - var(--px)) calc(100% - var(--px)),calc(100% - var(--px)*2) calc(100% - var(--px)),calc(100% - var(--px)*2) 100%,
+  calc(var(--px)*2) 100%,calc(var(--px)*2) calc(100% - var(--px)),var(--px) calc(100% - var(--px)),var(--px) calc(100% - var(--px)*2),0 calc(100% - var(--px)*2))}
+
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.top img{height:26px;width:auto}
+.iconbtn{width:40px;height:40px;display:grid;place-items:center;background:var(--carvao);color:var(--branco);border:0;cursor:pointer}
+.iconbtn svg{width:19px;height:19px}
+
+/* Perfil */
+.profile{text-align:center;margin-bottom:22px}
+.avatar{width:84px;height:84px;margin:0 auto 12px}
+.avatar img{width:100%;height:100%}
+.profile h1{font:400 34px/1 var(--f-titulo);text-transform:uppercase;letter-spacing:.01em}
+.profile h1 b{font-weight:400;color:var(--lima)}
+.handle{font:400 12px/1 var(--f-pixel);color:var(--lima);margin-top:8px;letter-spacing:.04em}
+.profile .bio{color:var(--cinza);font-size:15px;line-height:1.45;margin:10px auto 0;max-width:34ch}
+
+/* Contagem do GTA 6 */
+.count{position:relative;background:var(--lima);color:var(--noite);padding:16px 18px;margin-bottom:12px;display:flex;align-items:center;gap:14px}
+.count .num{font:400 52px/.9 var(--f-titulo);min-width:2ch;text-align:center}
+.count .t{flex:1;min-width:0}
+.count .kicker{font:700 11px/1 var(--f-pixel);letter-spacing:.06em;text-transform:uppercase}
+.count h2{font:400 22px/1.05 var(--f-titulo);text-transform:uppercase;margin-top:6px}
+.count .arr{width:22px;height:22px;flex:none}
+
+/* Link principal */
+.spot{display:flex;align-items:center;gap:14px;background:var(--carvao);padding:16px 18px;margin-bottom:26px;border-left:6px solid var(--lima)}
+.spot .t{flex:1;min-width:0}
+.spot .kicker{font:400 11px/1 var(--f-pixel);color:var(--lima);text-transform:uppercase;letter-spacing:.05em}
+.spot h2{font:400 22px/1.1 var(--f-titulo);text-transform:uppercase;margin-top:6px}
+.spot p{color:var(--cinza);font-size:14px;margin-top:4px}
+.go{width:40px;height:40px;flex:none;display:grid;place-items:center;background:var(--lima);color:var(--noite)}
+.go svg{width:20px;height:20px}
+
+.label{font:400 12px/1 var(--f-pixel);color:var(--cinza);text-transform:uppercase;letter-spacing:.06em;margin:0 2px 10px;display:flex;align-items:center;gap:8px}
+.label::before{content:"";width:8px;height:8px;background:var(--lima)}
+
+/* Destaques: últimas matérias do site */
+.posts{display:grid;gap:10px;margin-bottom:26px}
+.post{display:flex;gap:12px;background:var(--carvao);padding:10px;align-items:center;min-height:86px}
+.post .thumb{width:104px;aspect-ratio:16/10;flex:none;background:var(--linha) center/cover no-repeat}
+.post .t{min-width:0}
+.post .tag{display:inline-block;font:400 10px/1 var(--f-pixel);text-transform:uppercase;letter-spacing:.04em;background:var(--tag,var(--lima));color:var(--noite);padding:4px 6px 3px}
+.post h3{font-size:15px;line-height:1.25;font-weight:700;margin-top:6px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.post:hover,.btn:hover,.spot:hover{background:var(--carvao-hi)}
+
+/* Botões */
+.links{display:grid;gap:10px;margin-bottom:26px}
+.btn{display:flex;align-items:center;gap:14px;background:var(--carvao);padding:14px 16px}
+.btn .ic{width:38px;height:38px;flex:none;display:grid;place-items:center;background:var(--linha);color:var(--lima)}
+.btn .ic svg{width:20px;height:20px}
+.btn .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.btn .txt b{font-size:16px}
+.btn .txt span{color:var(--cinza);font-size:13px}
+.btn .arr{width:18px;height:18px;color:var(--cinza);flex:none}
+
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px}
+.cats a{font:400 11px/1 var(--f-pixel);text-transform:uppercase;letter-spacing:.04em;padding:9px 10px 8px;background:var(--carvao);border-bottom:3px solid var(--c,var(--lima))}
+
+footer{text-align:center;display:grid;gap:10px;justify-items:center;color:var(--cinza);font-size:13px}
+footer img{height:20px;width:auto;opacity:.9}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;transition:.25s;background:var(--lima);color:var(--noite);
+  font:400 12px/1 var(--f-pixel);padding:12px 14px;pointer-events:none;z-index:5}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* Entrada em degraus */
+@media (prefers-reduced-motion:no-preference){
+  .rise{animation:rise .5s steps(5) both}
+  .d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}.d4{animation-delay:.24s}.d5{animation-delay:.3s}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+}

@@ -1,0 +1,78 @@
+name: Coletar
+
+# A Routine que escreve as matérias roda num sandbox sem saída para a web: só
+# PyPI e as APIs da Anthropic passam pelo proxy. Nenhum feed de notícia é
+# alcançável de lá.
+#
+# Então a coleta acontece aqui, onde há internet, e o resultado chega até a
+# Routine pelo próprio repositório: este workflow commita data/briefing.json e a
+# Routine lê o arquivo depois de clonar.
+#
+# Roda de 2 em 2 horas (07h a 21h), antes de cada rodada da Routine (minuto 37),
+# para dar folga se um feed estiver lento. O teto diario de materias e dividido
+# entre as rodadas (ver publishing.run_hours no site.config.yaml), e uma coleta
+# que falha e recuperada pela rodada seguinte do mesmo dia.
+#
+# O GitHub atrasa horários agendados, e muito na hora cheia: em 05/10/2026 a
+# coleta das 18h saiu às 22h42, e a das 07h de 06/10 não tinha saído às 08h20,
+# então a Routine das 07h30 encontrou o briefing de ontem e não escreveu nada.
+# Por isso cada rodada tem duas tentativas fora da hora cheia (44 e 20 minutos
+# antes da Routine), mais uma às 06h23 para a primeira do dia. Repetir não faz mal: o comando
+# 'briefing' da Routine tira o que já virou matéria e refaz o teto.
+on:
+  schedule:
+    - cron: "23 9 * * *"                              # 06:23 America/Sao_Paulo
+    - cron: "53 9,11,13,15,17,19,21,23 * * *"         # 06:53, 08:53 ... 20:53
+    - cron: "17 10,12,14,16,18,20,22,0 * * *"         # 07:17, 09:17 ... 21:17
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Pautas a baixar (0 = o teto da rodada). Use 10 para um dia de 10 matérias."
+        required: false
+        default: "0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coletar
+  cancel-in-progress: false
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Coletar as pautas do dia
+        run: python -m scripts.pipeline.run brief --limit ${{ github.event.inputs.limit || 0 }}
+
+      - name: Commitar o briefing
+        run: |
+          git config user.name "$(python -m scripts.marca get bot.nome 2>/dev/null || echo marca-bot)"
+          git config user.email "$(python -m scripts.marca get bot.email 2>/dev/null || echo bot@example.com)"
+          git add data/briefing.json
+          if git diff --cached --quiet; then
+            echo "Briefing inalterado."
+          else
+            git commit -m "briefing: coleta de $(TZ=America/Sao_Paulo date +%Y-%m-%d)"
+            # A Routine pode ter commitado matérias enquanto a coleta rodava.
+            enviado=0
+            for tentativa in 1 2 3; do
+              if git pull --rebase origin main && git push; then enviado=1; break; fi
+              sleep 5
+            done
+            [ "$enviado" = 1 ]
+          fi
+
+      - name: Resumo
+        if: always()
+        run: python -m scripts.pipeline.run briefing >> "$GITHUB_STEP_SUMMARY" || true
