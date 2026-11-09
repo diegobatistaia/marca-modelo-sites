@@ -248,6 +248,14 @@ coletas e listas da pesquisa, pautas e resultados do Instagram.
 
 ### 5.2 [VOCÊ] Criar o repositório no GitHub (2 minutos)
 
+**Só uma vez, antes da primeira marca:** marcar o molde como modelo.
+Abra https://github.com/diegobatistaia/marca-modelo-sites/settings, logo no
+começo da página marque a caixa **Template repository** e pronto (salva sozinho).
+Sem isso o botão **Use this template** não aparece.
+
+**Para cada marca:**
+
+
 1. Abra https://github.com/diegobatistaia/marca-modelo-sites
 2. Clique no botão verde **Use this template** (canto de cima, à direita) > **Create a new repository**.
 3. Em **Repository name**, escreva o nome da marca em minúsculas, sem espaço (ex.: `novamarca`).
