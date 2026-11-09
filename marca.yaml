@@ -1,0 +1,69 @@
+# ---------------------------------------------------------------------------
+# FICHA DA MARCA. Este é o arquivo principal do molde: o que é da marca mora aqui.
+#
+# O código lê daqui o nome, o domínio, o @, os horários, o CTA e o aviso legal.
+# O que é do NICHO (fontes de notícia, editorias, palavras) fica em
+# site.config.yaml; os CONCORRENTES e TEMAS dos Reels ficam em
+# social/pesquisa/config.yaml; a IDENTIDADE (logos, cores, fontes) fica nos
+# arquivos listados em LEIAME-MOLDE.md.
+#
+# Valores abaixo são de exemplo ("Marca Exemplo"). Troque todos.
+# NUNCA escreva chave/token/senha aqui: chaves vão só em GitHub > Secrets.
+# ---------------------------------------------------------------------------
+
+marca:
+  nome: Marca Exemplo
+  artigo: a                     # "a Pixelzada" / "o Cortexplor"
+  slogan: Notícias de Exemplo
+  descricao: Notícias de exemplo, checadas e sempre com fonte.
+  sobre: >-
+    A Marca Exemplo é um site de notícias em português. Troque este texto
+    pelo primeiro parágrafo da página "Sobre".
+  nicho: exemplo                # games | gta6 | carros | tecnologia | financas | outro
+  # Texto fixo que entra na legenda de todo post, no rodapé do site e na página
+  # "Sobre". OBRIGATÓRIO no mercado financeiro:
+  #   "Conteúdo informativo. Não é recomendação de investimento."
+  aviso_legal: ""
+
+site:
+  dominio: exemplo.com.br
+  email: contato@exemplo.com.br
+
+instagram:
+  usuario: marcaexemplo         # sem @
+  hashtag: "#marcaexemplo"      # primeira hashtag de todo post
+  # Carrosséis: horários (Brasília) e grupo de cada um. "destaque" = assunto
+  # principal da marca (ex.: GTA 6 na Pixelzada); "outros" = o resto.
+  # Um horário de destaque sem pauta de destaque pega "outros", e vice-versa.
+  carrosseis:
+    ligado: true
+    horarios:
+      - {hora: "09:00", grupo: outros}
+      - {hora: "13:00", grupo: destaque}
+      - {hora: "17:00", grupo: outros}
+      - {hora: "21:00", grupo: destaque}
+    destaque_nome: o assunto principal   # aparece nos relatórios
+    story: destaque                      # todos | destaque | nenhum
+
+reels:
+  # Horários de Reel (Brasília). Comece com poucos e suba aos poucos.
+  horarios: ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]
+  # Frase de baixo do Reel e da legenda: só convida para seguir, sem frase
+  # inventada. {assunto} vem do tema do vídeo (social/pesquisa/config.yaml).
+  cta: "Essa é a página pra seguir e acompanhar {assunto}"
+  # Dar crédito ao perfil de origem na legenda dos Reels de outros perfis.
+  credito_origem: true
+
+# Identificação do robô nos commits.
+bot:
+  nome: marcaexemplo-bot
+  email: bot@exemplo.com.br
+
+# Hospedagem (Hostinger: hPanel > Sites > <domínio> > Avançado > Acesso SSH).
+# O IP pode mudar com o tempo: se o deploy der "/sbin/nologin", confira aqui.
+deploy:
+  ligado: false                 # true depois de cadastrar HOSTINGER_SSH_KEY
+  host: ""
+  porta: 65002
+  usuario: ""
+  pasta: ""                     # ex.: /home/u000000000/domains/exemplo.com.br/public_html/

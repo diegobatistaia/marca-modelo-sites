@@ -1,0 +1,131 @@
+name: Instagram
+
+# Publica no Instagram da marca sozinho, nos horários de carrossel de
+# marca.yaml (instagram.carrosseis). O workflow roda toda hora, das 8h às 23h
+# (Brasília); fora dos horários da marca ele só confere e sai em segundos.
+# Story conforme instagram.carrosseis.story; Reel automático do carrossel
+# desligado (REEL_ATIVO em scripts/social/instagram.py).
+#
+# A redação (Routine do Claude) escreve as pautas em social/pautas/. Aqui, onde
+# há internet e as chaves, o post é desenhado, enviado para
+# <domínio da marca>/ig/<slug>/ (o Instagram busca a imagem por URL pública) e
+# publicado pela API. O resultado volta para a pauta e para
+# social/publicar/ultimo.json. Regras e horários: scripts/social/instagram.py.
+#
+# O GitHub atrasa os agendamentos, então cada horário tem três tentativas; a
+# primeira que roda publica e as outras saem em segundos.
+on:
+  schedule:
+    - cron: "2,22,47 11-23 * * *"   # 08h às 20h47 (Brasília)
+    - cron: "2,22,47 0-2 * * *"     # 21h às 23h47
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: "rodada = publica se for horário; teste = confere a chave; conferir = lista os últimos posts; story = refaz só o Story do slug"
+        type: choice
+        options: [teste, conferir, rodada, story]
+        default: teste
+      slug:
+        description: "só para acao=story: a pauta cujo Story não saiu"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram
+  cancel-in-progress: false
+
+jobs:
+  instagram:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
+      ACAO: ${{ github.event.inputs.acao || 'rodada' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Teste da chave ou conferência
+        if: env.ACAO != 'rodada' && env.ACAO != 'story'
+        run: python -m scripts.social.instagram "$ACAO"
+
+      - name: Refazer só o Story
+        if: env.ACAO == 'story'
+        env:
+          SLUG: ${{ github.event.inputs.slug }}
+        run: |
+          pip install -r requirements.txt
+          python -m scripts.social.instagram story "$SLUG"
+
+      - name: É horário de publicar?
+        id: decidir
+        if: env.ACAO == 'rodada'
+        run: python -m scripts.social.instagram decidir
+
+      - name: Instalar o gerador
+        if: steps.decidir.outputs.acao == 'carrossel' || steps.decidir.outputs.acao == 'reel'
+        run: |
+          pip install -r requirements.txt -r requirements-instagram.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Desenhar
+        id: preparar
+        if: steps.decidir.outputs.acao == 'carrossel' || steps.decidir.outputs.acao == 'reel'
+        run: python -m scripts.social.instagram preparar
+
+      - name: Enviar a mídia para o site (/ig/)
+        if: steps.preparar.outputs.acao == 'carrossel' || steps.preparar.outputs.acao == 'reel'
+        env:
+          SLUG: ${{ steps.preparar.outputs.slug }}
+        run: |
+          eval "$(python - <<'PY'
+          import yaml
+          d = __import__("scripts.engine.config", fromlist=["load"]).load().data["deploy"]
+          for k in ("host", "port", "user", "remote_path"):
+              print(f'DESTINO_{k.upper()}="{d[k]}"')
+          PY
+          )"
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Mesmas tentativas do Deploy: a Hostinger às vezes recusa o SSH por alguns segundos.
+          for tentativa in 1 2 3 4 5; do
+            # O rsync da Hostinger é antigo (3.1.3) e não tem --mkpath: a pasta é criada antes.
+            if ssh -i ~/.ssh/deploy_key -p $DESTINO_PORT -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=20 \
+                 "$DESTINO_USER@$DESTINO_HOST" "mkdir -p '${DESTINO_REMOTE_PATH%/}/ig/$SLUG'" && \
+               rsync -rlvz \
+                 -e "ssh -i ~/.ssh/deploy_key -p $DESTINO_PORT -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=20" \
+                 "social/saida/$SLUG/" "$DESTINO_USER@$DESTINO_HOST:${DESTINO_REMOTE_PATH%/}/ig/$SLUG/"; then
+              rm -f ~/.ssh/deploy_key
+              exit 0
+            fi
+            sleep $((tentativa * 15))
+          done
+          rm -f ~/.ssh/deploy_key
+          exit 1
+
+      - name: Publicar no Instagram
+        if: steps.preparar.outputs.acao == 'carrossel' || steps.preparar.outputs.acao == 'reel'
+        run: python -m scripts.social.instagram publicar
+
+      - name: Registrar o resultado
+        if: always()
+        run: |
+          git config user.name "$(python -m scripts.marca get bot.nome 2>/dev/null || echo marca-bot)"
+          git config user.email "$(python -m scripts.marca get bot.email 2>/dev/null || echo bot@example.com)"
+          git add social/pautas social/publicar 2>/dev/null || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "instagram: $ACAO $(TZ=America/Sao_Paulo date '+%d/%m %H:%M')"
+          # A Routine pode ter mandado pautas novas enquanto este job rodava.
+          for tentativa in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((tentativa * 4))
+          done
+          exit 1

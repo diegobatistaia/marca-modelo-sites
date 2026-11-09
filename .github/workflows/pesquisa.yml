@@ -1,0 +1,116 @@
+name: Pesquisa de vídeos
+
+# Motor de pesquisa de vídeos dos concorrentes (scripts/social/pesquisa.py).
+# Todo dia às 6h (Brasília) lê os perfis concorrentes pela API oficial do
+# Instagram e grava a lista do dia em social/pesquisa/listas/. No modo
+# lançamento (config.yaml) coleta também às 11h, 15h e 19h. Os horários que
+# valem estão em social/pesquisa/config.yaml; as rodadas fora deles não fazem nada.
+#
+# Botão "Run workflow":
+#   teste    confere a chave (secret META_TOKEN) e lê 1 perfil
+#   coletar  faz a coleta e a lista agora, fora do horário
+#   baixar   baixa os vídeos escolhidos: data (AAAA-MM-DD) + números (ex.: 1,4,7)
+#   completar  roda o piso agora (baixa, monta e agenda o que faltar)
+#   link     baixa e monta o Reel de um link que o dono mandou
+#
+# PISO DE REELS POR DIA: toda rodada (agendada ou não) confere a fila de hoje
+# e dos próximos 2 dias; se faltar vídeo, baixa sozinho os melhores da lista
+# (scripts/social/pesquisa.py completar) e o job "montar" põe na identidade e
+# agenda (scripts/social/montagem.py). Ninguém precisa responder nada.
+on:
+  schedule:
+    - cron: "5,35 9 * * *"     # 6h
+    - cron: "5,35 14 * * *"    # 11h (só no lançamento)
+    - cron: "5,35 18 * * *"    # 15h (só no lançamento)
+    - cron: "5,35 22 * * *"    # 19h (só no lançamento)
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: "teste, coletar ou baixar"
+        type: choice
+        options: [teste, coletar, baixar, completar, link]
+        default: teste
+      data:
+        description: "baixar: data da lista (AAAA-MM-DD)"
+        required: false
+      numeros:
+        description: "baixar: números da lista (ex.: 1,4,7)"
+        required: false
+      link:
+        description: "link: endereço do Reel que você mandou (pode ser vários, separados por espaço)"
+        required: false
+
+permissions:
+  contents: write
+  models: read      # GitHub Models escreve o título do Reel (montagem.py)
+
+concurrency:
+  group: pesquisa
+  cancel-in-progress: false
+
+jobs:
+  pesquisa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      META_TOKEN: ${{ secrets.META_TOKEN }}
+      ACAO: ${{ github.event.inputs.acao || 'agendada' }}
+      DATA: ${{ github.event.inputs.data }}
+      NUMEROS: ${{ github.event.inputs.numeros }}
+      LINK: ${{ github.event.inputs.link }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml yt-dlp
+
+      - name: Teste da chave
+        if: env.ACAO == 'teste'
+        run: python -m scripts.social.pesquisa teste
+
+      - name: Coleta agendada
+        if: env.ACAO == 'agendada'
+        run: python -m scripts.social.pesquisa coletar
+
+      - name: Coleta agora
+        if: env.ACAO == 'coletar'
+        run: python -m scripts.social.pesquisa coletar --forcar
+
+      - name: Baixar os escolhidos
+        if: env.ACAO == 'baixar'
+        run: python -m scripts.social.pesquisa baixar "$DATA" "$NUMEROS"
+
+      - name: Baixar o vídeo do link
+        if: env.ACAO == 'link'
+        run: python -m scripts.social.pesquisa link "$LINK"
+
+      - name: Piso dos 6 Reels por dia (baixa o que faltar)
+        if: env.ACAO != 'teste' && env.ACAO != 'baixar' && env.ACAO != 'link'
+        run: python -m scripts.social.pesquisa completar
+
+      - name: Registrar o resultado
+        if: always() && env.ACAO != 'teste'
+        run: |
+          git config user.name "$(python -m scripts.marca get bot.nome 2>/dev/null || echo marca-bot)"
+          git config user.email "$(python -m scripts.marca get bot.email 2>/dev/null || echo bot@example.com)"
+          git add -A social/pesquisa
+          if [ -d social/reels/entrada ]; then git add -A social/reels/entrada; fi
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "pesquisa: $ACAO $(TZ=America/Sao_Paulo date '+%d/%m %H:%M')"
+          for tentativa in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((tentativa * 4))
+          done
+          exit 1
+
+  # Monta na identidade e agenda tudo o que caiu em social/reels/entrada/
+  # (workflow reutilizável montar.yml, o mesmo que o robô do Telegram usa).
+  montar:
+    needs: pesquisa
+    if: always() && github.event.inputs.acao != 'teste'
+    uses: ./.github/workflows/montar.yml
