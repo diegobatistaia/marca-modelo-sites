@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   ler:
+    if: ${{ github.event_name != 'schedule' || !endsWith(github.repository, '/marca-modelo-sites') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -90,6 +91,7 @@ jobs:
     uses: ./.github/workflows/montar.yml
 
   avisar:
+    if: ${{ github.event_name != 'schedule' || !endsWith(github.repository, '/marca-modelo-sites') }}
     needs: montar
     runs-on: ubuntu-latest
     timeout-minutes: 5

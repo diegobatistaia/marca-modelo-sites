@@ -38,6 +38,7 @@ concurrency:
 
 jobs:
   instagram:
+    if: ${{ github.event_name != 'schedule' || !endsWith(github.repository, '/marca-modelo-sites') }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:

@@ -33,6 +33,7 @@ jobs:
   # Enquanto o dominio e a hospedagem nao estiverem configurados, o deploy fica
   # desligado em site.config.yaml (deploy.enabled: false) e este job so avisa.
   alvo:
+    if: ${{ github.event_name != 'schedule' || !endsWith(github.repository, '/marca-modelo-sites') }}
     runs-on: ubuntu-latest
     outputs:
       enabled: ${{ steps.ler.outputs.enabled }}

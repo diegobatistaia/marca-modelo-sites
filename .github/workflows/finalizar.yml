@@ -35,6 +35,7 @@ concurrency:
 
 jobs:
   finalizar:
+    if: ${{ github.event_name != 'schedule' || !endsWith(github.repository, '/marca-modelo-sites') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -87,6 +88,7 @@ jobs:
         run: python -m scripts.pipeline.run status >> "$GITHUB_STEP_SUMMARY" || true
 
   publicar:
+    if: ${{ github.event_name != 'schedule' || !endsWith(github.repository, '/marca-modelo-sites') }}
     # O commit acima foi feito com o GITHUB_TOKEN, e o GitHub nao dispara
     # workflows a partir dele. Chamamos o Deploy explicitamente.
     needs: finalizar
